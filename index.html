@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.svg" type="image/svg+xml" sizes="any">
+    <title>Generator komunikatów</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            overflow: hidden; /* Usunięcie możliwości przewijania */
+        }
+        #categories {
+            margin-top: 50px; /* Ustalenie stałej odległości od górnej części layoutu */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-start min-h-screen">
+    <h1 class="text-4xl font-bold text-center mb-12">Generator komunikatów</h1>
+
+    <div id="categories" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <button class="bg-black hover:bg-white text-white hover:text-black font-bold py-4 px-6 text-lg rounded-full transition-all duration-300 ease-in-out" onclick="selectCategory(this, 'Podziękowania')">
+            Podziękowania
+        </button>
+        <button class="bg-black hover:bg-white text-white hover:text-black font-bold py-4 px-6 text-lg rounded-full transition-all duration-300 ease-in-out" onclick="selectCategory(this, 'Podaj nam swojego maila')">
+            Podaj nam swojego maila
+        </button>
+        <button class="bg-black hover:bg-white text-white hover:text-black font-bold py-4 px-6 text-lg rounded-full transition-all duration-300 ease-in-out" onclick="selectCategory(this, 'Błąd')">
+            Błąd
+        </button>
+        <button class="bg-black hover:bg-white text-white hover:text-black font-bold py-4 px-6 text-lg rounded-full transition-all duration-300 ease-in-out" onclick="selectCategory(this, 'Loading')">
+            Loading
+        </button>
+        <button class="bg-black hover:bg-white text-white hover:text-black font-bold py-4 px-6 text-lg rounded-full transition-all duration-300 ease-in-out" onclick="selectCategory(this, 'Wiadomość potwierdzająca')">
+            Wiadomość potwierdzająca
+        </button>
+    </div>
+
+    <div class="text-center mb-8">
+        <button id="generateBtn" class="shadow-[inset_0_0_0_2px_#616467] text-black px-12 py-4 text-lg rounded-full tracking-widest uppercase font-bold bg-transparent hover:bg-black hover:text-white dark:text-neutral-200 transition duration-200">
+            Generuj
+        </button>
+    </div>
+
+    <div id="output" class="text-7xl font-bold text-center w-full max-w-full cursor-pointer flex items-center justify-center flex-col mb-8 p-8">
+        <span id="messageText"></span>
+        <span class="text-sm mt-4">kliknij by skopiować</span>
+    </div>
+
+    <script>
+        const API_KEY = 'YOUR_AIRTABLE_API_KEY'; // Wstaw swój klucz API
+        const BASE_ID = 'YOUR_BASE_ID'; // Wstaw ID swojej bazy
+        const TABLE_NAME = 'YOUR_TABLE_NAME'; // Wstaw nazwę swojej tabeli
+
+        let selectedCategory = null;
+        let messages = {};
+
+        // Funkcja do pobierania danych z Airtable
+        async function fetchMessages() {
+            const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, {
+                headers: {
+                    Authorization: `Bearer ${API_KEY}`
+                }
+            });
+            const data = await response.json();
+            data.records.forEach(record => {
+                const category = record.fields.Category; // Upewnij się, że pole nazywa się "Category"
+                const message = record.fields.Message; // Upewnij się, że pole nazywa się "Message"
+                if (!messages[category]) {
+                    messages[category] = [];
+                }
+                messages[category].push(message);
+            });
+        }
+
+        function selectCategory(button, category) {
+            document.querySelectorAll('#categories button').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-black', 'border', 'border-black');
+                btn.classList.add('bg-black', 'text-white');
+            });
+            button.classList.remove('bg-black', 'text-white');
+            button.classList.add('bg-white', 'text-black', 'border', 'border-black');
+            selectedCategory = category;
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            if (selectedCategory) {
+                const options = messages[selectedCategory];
+                const randomMessage = options[Math.floor(Math.random() * options.length)];
+                document.getElementById('messageText').textContent = randomMessage;
+            } else {
+                document.getElementById('messageText').textContent = 'Proszę wybrać kategorię.';
+            }
+        });
+
+        document.getElementById('output').addEventListener('click', () => {
+            const message = document.getElementById('messageText').textContent;
+            navigator.clipboard.writeText(message).then(() => {
+                alert('Skopiowano do schowka!');
+            });
+        });
+
+        // Wywołanie funkcji fetchMessages przy załadowaniu strony
+        window.onload = fetchMessages;
+    </script>
+</body>
+</html>
