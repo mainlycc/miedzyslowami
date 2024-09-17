@@ -48,9 +48,9 @@
     </div>
 
     <script>
-        const API_KEY = 'YOUR_AIRTABLE_API_KEY'; // Wstaw swój klucz API
-        const BASE_ID = 'YOUR_BASE_ID'; // Wstaw ID swojej bazy
-        const TABLE_NAME = 'YOUR_TABLE_NAME'; // Wstaw nazwę swojej tabeli
+        const API_KEY = 'patUvImGiQdVIjO6O.7d98bd53645ab7152a1c9214d1690503ab666435b3d426f5422085c7eddfa342'; // Wstaw swój klucz API
+        const BASE_ID = 'appmdnhps0Q2Vdmem'; // Wstaw ID swojej bazy
+        const TABLE_NAME = 'wiadomosci'; // Wstaw nazwę swojej tabeli
 
         let selectedCategory = null;
         let messages = {};
@@ -63,14 +63,40 @@
                 }
             });
             const data = await response.json();
-            data.records.forEach(record => {
-                const category = record.fields.Category; // Upewnij się, że pole nazywa się "Category"
-                const message = record.fields.Message; // Upewnij się, że pole nazywa się "Message"
-                if (!messages[category]) {
-                    messages[category] = [];
-                }
-                messages[category].push(message);
-            });
+            console.log(data); // Sprawdź, co zwraca API
+
+            // Inicjalizacja obiektu messages
+            messages = {
+                "Podziękowania": [],
+                "Podaj nam swojego maila": [],
+                "Błąd": [],
+                "Loading": [],
+                "Wiadomość potwierdzająca": []
+            };
+
+            // Sprawdzenie, czy są rekordy
+            if (data.records) {
+                data.records.forEach(record => {
+                    // Dodawanie wyrażeń do odpowiednich kategorii
+                    if (record.fields["Podziękowania"]) {
+                        messages["Podziękowania"].push(record.fields["Podziękowania"]);
+                    }
+                    if (record.fields["Podaj nam swojego maila"]) {
+                        messages["Podaj nam swojego maila"].push(record.fields["Podaj nam swojego maila"]);
+                    }
+                    if (record.fields["Błąd"]) {
+                        messages["Błąd"].push(record.fields["Błąd"]);
+                    }
+                    if (record.fields["Loading"]) {
+                        messages["Loading"].push(record.fields["Loading"]);
+                    }
+                    if (record.fields["Wiadomość potwierdzająca"]) {
+                        messages["Wiadomość potwierdzająca"].push(record.fields["Wiadomość potwierdzająca"]);
+                    }
+                });
+            } else {
+                console.error("Brak rekordów w odpowiedzi:", data);
+            }
         }
 
         function selectCategory(button, category) {
@@ -86,8 +112,12 @@
         document.getElementById('generateBtn').addEventListener('click', () => {
             if (selectedCategory) {
                 const options = messages[selectedCategory];
-                const randomMessage = options[Math.floor(Math.random() * options.length)];
-                document.getElementById('messageText').textContent = randomMessage;
+                if (options && options.length > 0) {
+                    const randomMessage = options[Math.floor(Math.random() * options.length)];
+                    document.getElementById('messageText').textContent = randomMessage;
+                } else {
+                    document.getElementById('messageText').textContent = 'Brak wiadomości w tej kategorii.';
+                }
             } else {
                 document.getElementById('messageText').textContent = 'Proszę wybrać kategorię.';
             }
